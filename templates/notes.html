@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Заметки для {{ username }}{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Заметки для {{ username }}</h1>
+
+<div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+    <h2 class="text-xl font-semibold mb-3 text-gray-700">Поиск заметок</h2>
+    <form action="{{ url_for('search_notes') }}" method="post" class="flex flex-col sm:flex-row gap-4">
+        <input type="text" id="search_query" name="search_query"
+               placeholder="Искать по ключевому слову..."
+               value="{{ search_query if search_query else '' }}"
+               class="flex-grow p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit"
+                class="bg-green-600 text-white p-3 rounded-md hover:bg-green-700 transition duration-200">
+            Найти
+        </button>
+    </form>
+</div>
+
+<h2 class="text-xl font-semibold mb-4 text-gray-700">Все ваши цели:</h2>
+
+{% if notes %}
+<ul class="space-y-4">
+    {% for note in notes %}
+    <li class="bg-blue-50 p-4 rounded-lg shadow-sm border border-blue-200">
+        <p class="text-lg font-medium text-blue-800">Тип цели: <span class="font-bold">{{ note.goal_type | capitalize }}</span></p>
+        <p class="text-gray-700 mt-2">{{ note.note }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-gray-600 text-center p-4 bg-yellow-50 rounded-md border border-yellow-200">
+    Пока нет заметок для этого пользователя.
+</p>
+{% endif %}
+
+<div class="mt-8 text-center">
+    <a href="{{ url_for('index') }}"
+       class="inline-block bg-gray-200 text-gray-800 p-3 rounded-md hover:bg-gray-300 transition duration-200">
+        Добавить новую цель
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Вход</h1>
+
+<form action="{{ url_for('login') }}" method="post" class="space-y-4">
+    <div>
+        <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Имя Пользователя:</label>
+        <input type="text" id="username" name="username" required
+               placeholder="Введите ваше имя пользователя"
+               class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+    </div>
+
+    <div>
+        <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Пароль:</label>
+        <input type="password" id="password" name="password" required
+               placeholder="Введите ваш пароль"
+               class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+    </div>
+
+    <button type="submit"
+            class="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-200">
+        Войти
+    </button>
+</form>
+
+<p class="mt-6 text-center text-gray-600">
+    Нет аккаунта? <a href="{{ url_for('register') }}" class="text-blue-600 hover:underline">Зарегистрироваться</a>
+</p>
+{% endblock %}

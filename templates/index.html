@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить Финансовую Цель{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Добавить Финансовую Цель</h1>
+
+<form action="{{ url_for('add_goal') }}" method="post" class="space-y-4">
+    <p class="text-gray-700 text-sm font-bold">Вы добавляете цель для пользователя: <span class="font-bold text-blue-600">{{ g.user.username }}</span></p>
+
+    <div>
+        <label for="goal_type" class="block text-gray-700 text-sm font-bold mb-2">Тип Цели:</label>
+        <select id="goal_type" name="goal_type"
+                class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+            <option value="сбережение">Сбережение</option>
+            <option value="накопление">Накопление</option>
+            <option value="инвестиции">Инвестиции</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="note" class="block text-gray-700 text-sm font-bold mb-2">Заметка о Цели:</label>
+        <textarea id="note" name="note" rows="4" required
+                  placeholder="Опишите вашу цель, например: 'Коплю на новую машину', 'Инвестиции в акции Tesla'"
+                  class="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full resize-y"></textarea>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-200">
+        Добавить Цель
+    </button>
+</form>
+{% endblock %}
