@@ -17,9 +17,11 @@
             {% for note in notes %}
                 <li class="p-4 border rounded-lg shadow-sm bg-gray-50">
                     <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
-                    <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }}</p> {# НОВОЕ: Переведено #}
-                    <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p> {# НОВОЕ: Переведено #}
-                    {# НОВОЕ: Кнопка "Редактировать" #}
+                    {# НОВОЕ: Отображение заметки и суммы #}
+                    <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }} ({{ note.amount | round(2) }})</p>
+                    {# НОВОЕ: Отображение даты и времени создания #}
+                    <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
+                    {# Кнопка "Редактировать" #}
                     <div class="mt-2 text-right">
                         <a href="{{ url_for('edit_goal', goal_id=note.id) }}" class="text-blue-500 hover:underline text-sm">{{ _('Редактировать') }}</a>
                     </div>

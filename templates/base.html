@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ g.locale }}"> {# НОВОЕ: lang теперь динамический #}
+<html lang="{{ g.locale }}"> {# lang теперь динамический #}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {# НОВОЕ: Заголовок страницы переводим #}
+    {# Заголовок страницы переводим #}
     <title>{% block title %}{{ _('Управление Финансами') }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -22,7 +22,7 @@
         }
         .container {
             max-width: 800px;
-            width: 100%; /* Убешимся, что контейнер занимает всю доступную ширину */
+            width: 100%; /* Убедимся, что контейнер занимает всю доступную ширину */
         }
         /* Дополнительные стили для лучшего вида */
         input[type="text"], input[type="password"], textarea, select {
@@ -40,23 +40,23 @@
 <body class="flex flex-col min-h-screen">
     <nav class="w-full bg-gray-800 text-white p-4 shadow-md">
         <div class="container mx-auto flex justify-between items-center">
-            {# НОВОЕ: Название приложения переводим #}
-            <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">{{ _('Мои Финансы') }}</a>
+            {# ИЗМЕНЕНО: Название приложения всегда 'My Finances', без перевода #}
+            <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">My Finances</a>
             <div class="flex items-center"> {# Добавил flex для выравнивания кнопок языка #}
                 {% if g.user %}
-                    {# НОВОЕ: Приветствие переводим #}
+                    {# Приветствие переводим #}
                     <span class="mr-4">{{ _('Привет,') }} <span class="font-bold">{{ g.user.username }}</span>!</span>
-                    {# НОВОЕ: "Мои Заметки" переводим #}
+                    {# "Мои Заметки" переводим #}
                     <a href="{{ url_for('user_notes', username=g.user.username) }}" class="mr-4 hover:text-gray-300">{{ _('Мои Заметки') }}</a>
-                    {# НОВОЕ: "Выйти" переводим #}
+                    {# "Выйти" переводим #}
                     <a href="{{ url_for('logout') }}" class="hover:text-gray-300">{{ _('Выйти') }}</a>
                 {% else %}
-                    {# НОВОЕ: "Регистрация" переводим #}
+                    {# "Регистрация" переводим #}
                     <a href="{{ url_for('register') }}" class="mr-4 hover:text-gray-300">{{ _('Регистрация') }}</a>
-                    {# НОВОЕ: "Войти" переводим #}
+                    {# "Войти" переводим #}
                     <a href="{{ url_for('login') }}" class="hover:text-gray-300">{{ _('Войти') }}</a>
                 {% endif %}
-                {# НОВОЕ: Кнопки выбора языка #}
+                {# Кнопки выбора языка #}
                 <a href="{{ url_for(request.endpoint, lang='ru', **request.view_args) }}" class="ml-4 px-2 py-1 rounded hover:bg-gray-700">Русский</a>
                 <a href="{{ url_for(request.endpoint, lang='en', **request.view_args) }}" class="ml-2 px-2 py-1 rounded hover:bg-gray-700">English</a>
             </div>
