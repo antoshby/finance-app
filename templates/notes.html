@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Мои Заметки') }}{% endblock %} {# НОВОЕ: Переведено #}
+
+{% block content %}
+    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Заметки пользователя:') }} {{ username }}</h2> {# НОВОЕ: Переведено #}
+
+    <h3 class="text-xl font-bold mb-4">{{ _('Поиск заметок') }}</h3> {# НОВОЕ: Переведено #}
+    <form action="{{ url_for('search_notes') }}" method="post" class="flex space-x-2 mb-6">
+        <input type="text" name="search_query" placeholder="{{ _('Введите запрос для поиска...') }}" value="{{ search_query or '' }}" class="flex-grow p-2 border rounded-md"> {# НОВОЕ: Переведено #}
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Найти') }}</button> {# НОВОЕ: Переведено #}
+    </form>
+
+    <h3 class="text-xl font-bold mb-4">{{ _('Все заметки:') }}</h3> {# НОВОЕ: Переведено #}
+    {% if notes %}
+        <ul class="space-y-4">
+            {% for note in notes %}
+                <li class="p-4 border rounded-lg shadow-sm bg-gray-50">
+                    <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
+                    <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }}</p> {# НОВОЕ: Переведено #}
+                    <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p> {# НОВОЕ: Переведено #}
+                    {# НОВОЕ: Кнопка "Редактировать" #}
+                    <div class="mt-2 text-right">
+                        <a href="{{ url_for('edit_goal', goal_id=note.id) }}" class="text-blue-500 hover:underline text-sm">{{ _('Редактировать') }}</a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-600">{{ _('У вас пока нет заметок. Добавьте первую!') }}</p> {# НОВОЕ: Переведено #}
+    {% endif %}
+{% endblock %}

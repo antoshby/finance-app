@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale }}"> {# НОВОЕ: lang теперь динамический #}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {# НОВОЕ: Заголовок страницы переводим #}
+    <title>{% block title %}{{ _('Управление Финансами') }}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Светло-серый фон */
+            color: #333;
+        }
+        /* Убедимся, что основной контент занимает доступное пространство */
+        .main-content-wrapper {
+            flex-grow: 1; /* Позволяет блоку растягиваться, занимая все доступное место между хедером и футером */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem; /* Добавляем небольшой отступ */
+        }
+        .container {
+            max-width: 800px;
+            width: 100%; /* Убешимся, что контейнер занимает всю доступную ширину */
+        }
+        /* Дополнительные стили для лучшего вида */
+        input[type="text"], input[type="password"], textarea, select {
+            @apply p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full;
+        }
+        button {
+            @apply bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-200;
+        }
+        .flash-success { @apply bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4; }
+        .flash-danger { @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4; }
+        .flash-warning { @apply bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4; }
+        .flash-info { @apply bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-4; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <nav class="w-full bg-gray-800 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            {# НОВОЕ: Название приложения переводим #}
+            <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">{{ _('Мои Финансы') }}</a>
+            <div class="flex items-center"> {# Добавил flex для выравнивания кнопок языка #}
+                {% if g.user %}
+                    {# НОВОЕ: Приветствие переводим #}
+                    <span class="mr-4">{{ _('Привет,') }} <span class="font-bold">{{ g.user.username }}</span>!</span>
+                    {# НОВОЕ: "Мои Заметки" переводим #}
+                    <a href="{{ url_for('user_notes', username=g.user.username) }}" class="mr-4 hover:text-gray-300">{{ _('Мои Заметки') }}</a>
+                    {# НОВОЕ: "Выйти" переводим #}
+                    <a href="{{ url_for('logout') }}" class="hover:text-gray-300">{{ _('Выйти') }}</a>
+                {% else %}
+                    {# НОВОЕ: "Регистрация" переводим #}
+                    <a href="{{ url_for('register') }}" class="mr-4 hover:text-gray-300">{{ _('Регистрация') }}</a>
+                    {# НОВОЕ: "Войти" переводим #}
+                    <a href="{{ url_for('login') }}" class="hover:text-gray-300">{{ _('Войти') }}</a>
+                {% endif %}
+                {# НОВОЕ: Кнопки выбора языка #}
+                <a href="{{ url_for(request.endpoint, lang='ru', **request.view_args) }}" class="ml-4 px-2 py-1 rounded hover:bg-gray-700">Русский</a>
+                <a href="{{ url_for(request.endpoint, lang='en', **request.view_args) }}" class="ml-2 px-2 py-1 rounded hover:bg-gray-700">English</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content-wrapper">
+        <div class="container bg-white p-8 rounded-lg shadow-lg">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <footer class="w-full bg-gray-800 text-white p-4 text-center shadow-md mt-auto">
+    Developed By AntOsh (<a href="https://immediatech.net" target="_blank" class="text-blue-400 hover:underline">immedia.tech</a>)
+</footer>
+</body>
+</html>

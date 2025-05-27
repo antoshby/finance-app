@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Добавить новую финансовую цель') }}{% endblock %} {# НОВОЕ: Переведено #}
+
+{% block content %}
+    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Добавить новую финансовую цель') }}</h2> {# НОВОЕ: Переведено #}
+    <form action="{{ url_for('add_goal') }}" method="post" class="space-y-4">
+        <div>
+            <label for="goal_type" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Тип цели:') }}</label> {# НОВОЕ: Переведено #}
+            <select id="goal_type" name="goal_type" class="w-full p-2 border rounded-md">
+                <option value="income">{{ _('Доход') }}</option> {# НОВОЕ: Переведено #}
+                <option value="expense">{{ _('Расход') }}</option> {# НОВОЕ: Переведено #}
+                <option value="saving">{{ _('Накопление') }}</option> {# НОВОЕ: Переведено #}
+            </select>
+        </div>
+        <div>
+            <label for="note" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Заметка:') }}</label> {# НОВОЕ: Переведено #}
+            <textarea id="note" name="note" rows="4" placeholder="{{ _('Опишите вашу цель...') }}" class="w-full p-2 border rounded-md" required></textarea> {# НОВОЕ: Переведено #}
+        </div>
+        {# НОВОЕ: Поле для суммы #}
+        <div>
+            <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Сумма:') }}</label> {# НОВОЕ: Переведено #}
+            <input type="number" id="amount" name="amount" step="0.01" placeholder="{{ _('Введите сумму...') }}" class="w-full p-2 border rounded-md" required> {# НОВОЕ: Переведено #}
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Добавить цель') }}</button> {# НОВОЕ: Переведено #}
+    </form>
+{% endblock %}

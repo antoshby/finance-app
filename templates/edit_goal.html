@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Редактировать запись') }}{% endblock %}
+
+{% block content %}
+    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Редактировать запись') }}</h2>
+
+    {# Добавим проверку на существование записи #}
+    {% if goal %}
+        <form method="post" class="space-y-4">
+            <div>
+                <label for="goal_type" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Тип цели:') }}</label>
+                <select id="goal_type" name="goal_type" class="w-full p-2 border rounded-md">
+                    <option value="income" {% if goal.goal_type == 'income' %}selected{% endif %}>{{ _('Доход') }}</option>
+                    <option value="expense" {% if goal.goal_type == 'expense' %}selected{% endif %}>{{ _('Расход') }}</option>
+                    <option value="saving" {% if goal.goal_type == 'saving' %}selected{% endif %}>{{ _('Накопление') }}</option>
+                </select>
+            </div>
+            <div>
+                <label for="note" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Заметка:') }}</label>
+                <textarea id="note" name="note" rows="4" class="w-full p-2 border rounded-md" required>{{ goal.note }}</textarea>
+            </div>
+            {# НОВОЕ: Поле для суммы (Задача 3) - добавим его сейчас, чтобы не возвращаться к этой форме #}
+            <div>
+                <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Сумма:') }}</label>
+                <input type="number" id="amount" name="amount" step="0.01" value="{{ goal.amount if goal.amount is not none else '0.00' }}" class="w-full p-2 border rounded-md" required>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Сохранить изменения') }}</button>
+            <a href="{{ url_for('user_notes', username=g.user.username) }}" class="block text-center mt-4 text-gray-600 hover:underline">{{ _('Отмена') }}</a>
+        </form>
+    {% else %}
+        <p class="text-gray-600 text-center">{{ _('Запись не найдена или у вас нет прав доступа.') }}</p>
+    {% endif %}
+{% endblock %}
