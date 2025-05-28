@@ -11,17 +11,72 @@
         <button type="submit" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Найти') }}</button> {# НОВОЕ: Переведено #}
     </form>
 
-    {# НОВОЕ: Блок для отображения месячного саммари #}
-    <div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
-        <h3 class="text-xl font-semibold mb-3 text-gray-700">{{ _('Итоги за текущий месяц:') }}</h3>
-        <ul class="list-disc list-inside text-gray-700">
-            <li>{{ _('Доход:') }} <span class="font-bold text-green-600">{{ monthly_summary.income | round(2) }}</span></li>
-            <li>{{ _('Расход:') }} <span class="font-bold text-red-600">{{ monthly_summary.expense | round(2) }}</span></li>
-            <li>{{ _('Накопление:') }} <span class="font-bold text-blue-600">{{ monthly_summary.saving | round(2) }}</span></li>
-            {# НОВОЕ: Расчет общего баланса за месяц #}
-            {% set total_balance = monthly_summary.income - monthly_summary.expense + monthly_summary.saving %}
-            <li>{{ _('Месячный баланс:') }} <span class="font-bold {% if total_balance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ total_balance | round(2) }}</span></li>
+    {# Блок для отображения месячного саммари (в виде карточки) #}
+    <div class="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200"> {# Добавлены классы для карточки #}
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">{{ _('Итоги за текущий месяц:') }}</h3>
+        <ul class="space-y-2 text-gray-700"> {# Изменен стиль списка для лучшего вида #}
+            <li class="flex justify-between items-center">
+                <span>{{ _('Доход:') }}</span>
+                <span class="font-bold text-green-600">{{ monthly_summary.income | round(2) }}</span>
+            </li>
+            <li class="flex justify-between items-center">
+                <span>{{ _('Расход:') }}</span>
+                <span class="font-bold text-red-600">{{ monthly_summary.expense | round(2) }}</span>
+            </li>
+            <li class="flex justify-between items-center">
+                <span>{{ _('Накопление:') }}</span>
+                <span class="font-bold text-blue-600">{{ monthly_summary.saving | round(2) }}</span>
+            </li>
+            <hr class="my-2 border-gray-300"> {# Разделитель #}
+            {% set total_balance_month = monthly_summary.income - monthly_summary.expense + monthly_summary.saving %}
+            <li class="flex justify-between items-center text-lg font-bold">
+                <span>{{ _('Месячный баланс:') }}</span>
+                <span class="{% if total_balance_month >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ total_balance_month | round(2) }}</span>
+            </li>
         </ul>
+    </div>
+
+    {# НОВОЕ: Блок для отображения общего саммари (в виде карточки) #}
+    <div class="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200"> {# Добавлены классы для карточки #}
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">{{ _('Общие итоги:') }}</h3>
+        <ul class="space-y-2 text-gray-700"> {# Изменен стиль списка #}
+            <li class="flex justify-between items-center">
+                <span>{{ _('Общий доход:') }}</span>
+                <span class="font-bold text-green-600">{{ total_summary.total_income | round(2) }}</span>
+            </li>
+            <li class="flex justify-between items-center">
+                <span>{{ _('Общий расход:') }}</span>
+                <span class="font-bold text-red-600">{{ total_summary.total_expense | round(2) }}</span>
+            </li>
+            <li class="flex justify-between items-center">
+                <span>{{ _('Общее накопление:') }}</span>
+                <span class="font-bold text-blue-600">{{ total_summary.total_saving | round(2) }}</span>
+            </li>
+            <hr class="my-2 border-gray-300"> {# Разделитель #}
+            {% set total_overall_balance = total_summary.total_income - total_summary.total_expense + total_summary.total_saving %}
+            <li class="flex justify-between items-center text-lg font-bold">
+                <span>{{ _('Общий баланс:') }}</span>
+                <span class="{% if total_overall_balance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ total_overall_balance | round(2) }}</span>
+            </li>
+        </ul>
+    </div>
+
+    {# Блок для отображения накоплений по конкретным целям (в виде карточки) #}
+    <div class="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200"> {# Добавлены классы для карточки #}
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">{{ _('Накопления по целям:') }}</h3>
+        {% if goals_summary %}
+            <ul class="space-y-2 text-gray-700"> {# Изменен стиль списка #}
+                {% for goal_name, amount in goals_summary.items() %}
+                    <li class="flex justify-between items-center">
+                        <span>{{ goal_name }}:</span>
+                        <span class="font-bold text-blue-600">{{ amount | round(2) }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-600">{{ _('Нет данных.') }}</p>
+        {% endif %}
+        <p class="text-sm text-gray-500 mt-2">{{ _('Цели можно добавить на странице "Мои Цели".') }}</p>
     </div>
 
 
@@ -29,15 +84,33 @@
     {% if notes %}
         <ul class="space-y-4">
             {% for note in notes %}
-                <li class="p-4 border rounded-lg shadow-sm bg-gray-50">
-                    <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
-                    {# Отображение заметки и суммы #}
-                    <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }} ({{ note.amount | round(2) }})</p>
-                    {# Отображение даты и времени создания #}
-                    <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
-                    {# Кнопка "Редактировать" #}
-                    <div class="mt-2 text-right">
+                <li class="p-4 border rounded-lg shadow-sm bg-gray-50 flex justify-between items-center"> {# Добавлен flex #}
+                    <div> {# Обертка для контента заметки #}
+                        <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
+                        {# Отображение заметки и суммы #}
+                        <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }} ({{ note.amount | round(2) }})</p>
+                        {# Отображение даты и времени создания #}
+                        <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
+                        {% if note.user_goal_id %} {# Если запись связана с целью #}
+                            {% set related_goal_name = "" %}
+                            {% for goal in user_goals_list_full %} {# Ищем имя цели по ID #}
+                                {% if goal.id == note.user_goal_id %}
+                                    {% set related_goal_name = goal.name %}
+                                {% endif %}
+                            {% endfor %}
+                            <p class="text-blue-500 text-sm">{{ _('Цель:') }} {{ related_goal_name }}</p>
+                        {% endif %}
+                    </div>
+
+                    {# Кнопки редактирования/удаления #}
+                    <div class="flex flex-col space-y-2"> {# Добавлена flex-колонка для кнопок #}
                         <a href="{{ url_for('edit_goal', goal_id=note.id) }}" class="text-blue-500 hover:underline text-sm">{{ _('Редактировать') }}</a>
+                        {# Форма для кнопки "Удалить" #}
+                        <form action="{{ url_for('delete_goal', goal_id=note.id) }}" method="post" onsubmit="return confirm('{{ _('Вы уверены, что хотите удалить эту запись?') }}');">
+                            <button type="submit" class="text-red-500 hover:underline text-sm p-0 bg-transparent border-none cursor-pointer">
+                                {{ _('Удалить') }}
+                            </button>
+                        </form>
                     </div>
                 </li>
             {% endfor %}

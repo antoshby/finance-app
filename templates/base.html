@@ -26,7 +26,7 @@
         }
         /* Дополнительные стили для лучшего вида */
         input[type="text"], input[type="password"], textarea, select {
-            @apply p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-500 w-full;
+            @apply p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full;
         }
         button {
             @apply bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-200;
@@ -42,12 +42,14 @@
         <div class="container mx-auto flex justify-between items-center">
             {# ИЗМЕНЕНО: Название приложения всегда 'My Finances', без перевода #}
             <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">My Finances</a>
-            <div class="flex items-center"> {# Добавил flex для выравнивания кнопок языка #}
+            <div class="flex items-center"> {# Добавил flex для выравнивания элементов #}
                 {% if g.user %}
                     {# Приветствие переводим #}
                     <span class="mr-4">{{ _('Привет,') }} <span class="font-bold">{{ g.user.username }}</span>!</span>
                     {# "Мои Заметки" переводим #}
                     <a href="{{ url_for('user_notes', username=g.user.username) }}" class="mr-4 hover:text-gray-300">{{ _('Мои Заметки') }}</a>
+                    {# НОВОЕ: Ссылка на страницу целей #}
+                    <a href="{{ url_for('goals') }}" class="mr-4 hover:text-gray-300">{{ _('Мои Цели') }}</a>
                     {# "Выйти" переводим #}
                     <a href="{{ url_for('logout') }}" class="hover:text-gray-300">{{ _('Выйти') }}</a>
                 {% else %}
@@ -56,9 +58,13 @@
                     {# "Войти" переводим #}
                     <a href="{{ url_for('login') }}" class="hover:text-gray-300">{{ _('Войти') }}</a>
                 {% endif %}
-                {# Кнопки выбора языка #}
-                <a href="{{ url_for(request.endpoint, lang='ru', **request.view_args) }}" class="ml-4 px-2 py-1 rounded hover:bg-gray-700">Русский</a>
-                <a href="{{ url_for(request.endpoint, lang='en', **request.view_args) }}" class="ml-2 px-2 py-1 rounded hover:bg-gray-700">English</a>
+
+                {# НОВОЕ: Выпадающее меню для выбора языка #}
+                <select id="language-selector" class="ml-4 px-2 py-1 rounded bg-gray-700 text-white border-none">
+                    <option value="ru" {% if g.locale == 'ru' %}selected{% endif %}>RU</option>
+                    <option value="en" {% if g.locale == 'en' %}selected{% endif %}>EN</option>
+                </select>
+
             </div>
         </div>
     </nav>
@@ -85,6 +91,29 @@
 
     {# Блок для подключения скриптов #}
     {% block scripts %}
+        {# УДАЛЕНО: {{ super() }} #}
+        {# Если вы еще не удалили static/js/background_animation.js, и он используется в index.html, убедитесь, что он здесь, или код ниже будет выполняться дважды #}
+        <script>
+            console.log("DEBUG JS Base: Script block in base.html loaded."); // ДИАГНОСТИКА
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log("DEBUG JS Base: DOMContentLoaded fired in base.html."); // ДИАГНОСТИКА
+                const selector = document.getElementById('language-selector');
+                if (selector) {
+                    console.log("DEBUG JS Base: Language selector found."); // ДИАГНОСТИКА
+                    // Устанавливаем выбранное значение селектора при загрузке страницы
+                    selector.value = "{{ g.locale }}"; // Убедимся, что селектор показывает текущий язык
+                    selector.addEventListener('change', function() {
+                        console.log("DEBUG JS Base: Language changed event fired. Value:", this.value); // ДИАГНОСТИКА
+                        const selectedLang = this.value;
+                        const currentUrl = new URL(window.location.href);
+                        currentUrl.searchParams.set('lang', selectedLang); // Изменяем параметр 'lang'
+                        window.location.href = currentUrl.toString(); // Перенаправляем на новый URL
+                    });
+                } else {
+                    console.warn("DEBUG JS Base: Language selector not found!"); // ДИАГНОСТИКА: Если селектор не найден
+                }
+            });
+        </script>
     {% endblock %}
 
 </body>
