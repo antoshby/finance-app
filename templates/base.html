@@ -26,7 +26,7 @@
         }
         /* Дополнительные стили для лучшего вида */
         input[type="text"], input[type="password"], textarea, select {
-            @apply p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full;
+            @apply p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-500 w-full;
         }
         button {
             @apply bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-200;
@@ -64,7 +64,7 @@
     </nav>
 
     <div class="main-content-wrapper">
-        <div class="container bg-white p-8 rounded-lg shadow-lg">
+        <div class="container bg-transparent p-8 rounded-lg shadow-lg"> {# ИЗМЕНЕНО: bg-white на bg-transparent #}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     <div class="flash-messages">
@@ -80,7 +80,12 @@
     </div>
 
     <footer class="w-full bg-gray-800 text-white p-4 text-center shadow-md mt-auto">
-    Developed By AntOsh (<a href="https://immediatech.net" target="_blank" class="text-blue-400 hover:underline">immedia.tech</a>)
-</footer>
+        Developed By AntOsh (<a href="https://immediatech.net" target="_blank" class="text-blue-400 hover:underline">immedia.tech</a>)
+    </footer>
+
+    {# Блок для подключения скриптов #}
+    {% block scripts %}
+    {% endblock %}
+
 </body>
 </html>

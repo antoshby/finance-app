@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import functools
 # Импортируем нашу локальную функцию перевода
 from locales import LOCALES, gettext_manual as _
+import datetime  # НОВОЕ: Импорт datetime для работы с датами
 
 app = Flask(__name__)
 # Делаем нашу _() функцию доступной в шаблонах Jinja2
@@ -33,10 +34,10 @@ def get_locale_from_request():
 # Добавляем g.locale для использования в шаблонах
 @app.before_request
 def set_g_locale():
-    print("DEBUG: >>> set_g_locale function started. <<<")  # ДИАГНОСТИКА
+    # print("DEBUG: >>> set_g_locale function started. <<<") # ДИАГНОСТИКА: Можно раскомментировать, если нужно
     g.locale = get_locale_from_request()
-    print(f"DEBUG: Active locale in g.locale: {g.locale}")  # ДИАГНОСТИКА
-    print("DEBUG: <<< set_g_locale function finished. >>>")  # ДИАГНОСТИКА
+    # print(f"DEBUG: Active locale in g.locale: {g.locale}") # ДИАГНОСТИКА
+    # print("DEBUG: <<< set_g_locale function finished. >>>") # ДИАГНОСТИКА
 
 
 # Функция для получения соединения с БД для каждого запроса
@@ -164,8 +165,8 @@ def logout():
 @login_required
 def index():
     """Главная страница для добавления цели (только для вошедших пользователей)."""
-    print(f"Текущая локаль: {g.locale}")  # ДИАГНОСТИКА: Эта строка должна быть!
-    print(f"Перевод 'Мои Финансы': {_('Мои Финансы')}")  # ДИАГНОСТИКА: Эта строка должна быть!
+    # print(f"Текущая локаль: {g.locale}") # ДИАГНОСТИКА: Можно раскомментировать, если нужно
+    # print(f"Перевод 'Мои Финансы': {_('Мои Финансы')}") # ДИАГНОСТИКА
     return render_template('index.html')
 
 
@@ -205,7 +206,7 @@ def add_goal():
 @app.route('/notes/<username>')
 @login_required
 def user_notes(username):
-    """Отображает заметки для конкретного пользователя и форму поиска."""
+    """Отображает заметки для конкретного пользователя и форму поиска, а также месячное саммари."""
     if g.user['username'] != username:
         flash(_('Вы не можете просматривать заметки других пользователей.'), 'danger')
         return redirect(url_for('index'))
@@ -215,11 +216,35 @@ def user_notes(username):
 
     user_id = g.user['id']
 
-    # Получаем все заметки для этого пользователя, включая сумму
-    cursor.execute("SELECT * FROM goals WHERE user_id = ?", (user_id,))
+    # Получаем все заметки для этого пользователя
+    cursor.execute("SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
     notes = cursor.fetchall()
 
-    return render_template('notes.html', username=username, notes=notes)
+    # Расчет месячного саммари
+    today = datetime.date.today()
+    first_day_of_month = today.replace(day=1)
+
+    monthly_summary = {
+        'income': 0.0,
+        'expense': 0.0,
+        'saving': 0.0
+    }
+
+    # Получаем все записи текущего пользователя за текущий месяц
+    # Используем (first_day_of_month + datetime.timedelta(days=32)).replace(day=1).isoformat()
+    # для получения первого дня СЛЕДУЮЩЕГО месяца, чтобы корректно выбрать диапазон.
+    cursor.execute(
+        "SELECT goal_type, amount FROM goals WHERE user_id = ? AND created_at >= ? AND created_at < ?",
+        (user_id, first_day_of_month.isoformat(),
+         (first_day_of_month + datetime.timedelta(days=32)).replace(day=1).isoformat())
+    )
+    monthly_records = cursor.fetchall()
+
+    for record in monthly_records:
+        if record['goal_type'] in monthly_summary:
+            monthly_summary[record['goal_type']] += record['amount']
+
+    return render_template('notes.html', username=username, notes=notes, monthly_summary=monthly_summary)
 
 
 # Страница поиска заметок
@@ -234,8 +259,7 @@ def search_notes():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Выполняем поиск заметок по ключевому слову в поле 'note' (и теперь по сумме, если нужно?)
-    # В текущей реализации поиск только по заметке
+    # Выполняем поиск заметок по ключевому слову в поле 'note'
     cursor.execute("SELECT * FROM goals WHERE user_id = ? AND note LIKE ?",
                    (user_id, f"%{search_query}%"))
     found_notes = cursor.fetchall()
@@ -244,7 +268,7 @@ def search_notes():
     return render_template('notes.html', username=username, notes=found_notes, search_query=search_query)
 
 
-# Страница редактирования записи (ПРАВИЛЬНОЕ РАЗМЕЩЕНИЕ)
+# Страница редактирования записи
 @app.route('/edit_goal/<int:goal_id>', methods=['GET', 'POST'])
 @login_required
 def edit_goal(goal_id):
@@ -263,14 +287,14 @@ def edit_goal(goal_id):
     if request.method == 'POST':
         goal_type = request.form['goal_type']
         note = request.form['note'].strip()
-        amount_str = request.form['amount'].strip()  # Получаем сумму как строку
+        amount_str = request.form['amount'].strip()
 
         # Валидация и преобразование суммы
         try:
             amount = float(amount_str)
         except ValueError:
             flash(_('Сумма должна быть числом.'), 'danger')
-            return render_template('edit_goal.html', goal=goal)  # Возвращаем ту же страницу с ошибкой
+            return render_template('edit_goal.html', goal=goal)
 
         if not note:
             flash(_('Пожалуйста, заполните заметку!'), 'warning')

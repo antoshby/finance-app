@@ -11,15 +11,29 @@
         <button type="submit" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Найти') }}</button> {# НОВОЕ: Переведено #}
     </form>
 
+    {# НОВОЕ: Блок для отображения месячного саммари #}
+    <div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+        <h3 class="text-xl font-semibold mb-3 text-gray-700">{{ _('Итоги за текущий месяц:') }}</h3>
+        <ul class="list-disc list-inside text-gray-700">
+            <li>{{ _('Доход:') }} <span class="font-bold text-green-600">{{ monthly_summary.income | round(2) }}</span></li>
+            <li>{{ _('Расход:') }} <span class="font-bold text-red-600">{{ monthly_summary.expense | round(2) }}</span></li>
+            <li>{{ _('Накопление:') }} <span class="font-bold text-blue-600">{{ monthly_summary.saving | round(2) }}</span></li>
+            {# НОВОЕ: Расчет общего баланса за месяц #}
+            {% set total_balance = monthly_summary.income - monthly_summary.expense + monthly_summary.saving %}
+            <li>{{ _('Месячный баланс:') }} <span class="font-bold {% if total_balance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ total_balance | round(2) }}</span></li>
+        </ul>
+    </div>
+
+
     <h3 class="text-xl font-bold mb-4">{{ _('Все заметки:') }}</h3> {# НОВОЕ: Переведено #}
     {% if notes %}
         <ul class="space-y-4">
             {% for note in notes %}
                 <li class="p-4 border rounded-lg shadow-sm bg-gray-50">
                     <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
-                    {# НОВОЕ: Отображение заметки и суммы #}
+                    {# Отображение заметки и суммы #}
                     <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }} ({{ note.amount | round(2) }})</p>
-                    {# НОВОЕ: Отображение даты и времени создания #}
+                    {# Отображение даты и времени создания #}
                     <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
                     {# Кнопка "Редактировать" #}
                     <div class="mt-2 text-right">

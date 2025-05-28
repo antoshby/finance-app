@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ _('Добавить новую финансовую цель') }}{% endblock %} {# НОВОЕ: Переведено #}
+{% block title %}{{ _('Добавить новую финансовую цель') }}{% endblock %}
 
 {% block content %}
+    {# Canvas для фоновой анимации с display: block #}
+    <canvas id="backgroundCanvas" class="fixed top-0 left-0 w-full h-full -z-10" style="display: block;"></canvas>
+
     <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Добавить новую финансовую цель') }}</h2> {# НОВОЕ: Переведено #}
     <form action="{{ url_for('add_goal') }}" method="post" class="space-y-4">
         <div>
@@ -17,11 +20,115 @@
             <label for="note" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Заметка:') }}</label> {# НОВОЕ: Переведено #}
             <textarea id="note" name="note" rows="4" placeholder="{{ _('Опишите вашу цель...') }}" class="w-full p-2 border rounded-md" required></textarea> {# НОВОЕ: Переведено #}
         </div>
-        {# НОВОЕ: Поле для суммы #}
+        {# Поле для суммы #}
         <div>
             <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Сумма:') }}</label> {# НОВОЕ: Переведено #}
             <input type="number" id="amount" name="amount" step="0.01" placeholder="{{ _('Введите сумму...') }}" class="w-full p-2 border rounded-md" required> {# НОВОЕ: Переведено #}
         </div>
         <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Добавить цель') }}</button> {# НОВОЕ: Переведено #}
     </form>
+{% endblock %}
+
+{# НОВОЕ: JavaScript-код анимации встроен прямо в HTML #}
+{% block scripts %}
+    {{ super() }} {# Вызов родительского блока scripts, если он есть #}
+    <script>
+        // Код из static/js/background_animation.js ВСТАВЛЯЕТСЯ СЮДА
+        // ТОЧНО так, как он есть в файле background_animation.js
+
+        console.log("DEBUG JS: Script file loaded (inline).");
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DEBUG JS: DOMContentLoaded fired (inline).");
+
+            const canvas = document.getElementById('backgroundCanvas');
+            if (!canvas) {
+                console.error("DEBUG JS ERROR: Canvas element with ID 'backgroundCanvas' not found!");
+                return;
+            }
+            console.log("DEBUG JS: Canvas element found (inline).");
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error("DEBUG JS ERROR: 2D rendering context not available for canvas!");
+                return;
+            }
+            console.log("DEBUG JS: Canvas context obtained (inline).");
+
+            let particles = [];
+            const numParticles = 100; // Количество частиц
+
+            // Устанавливаем размер холста
+            function setCanvasSize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                console.log("DEBUG JS: Canvas size set to: " + canvas.width + "x" + canvas.height + " (inline)");
+            }
+
+            // Класс для частицы
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.color = 'rgba(255, 255, 255, 0.5)';
+                }
+
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+
+                    if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+                        this.speedX = -this.speedX;
+                    }
+                    if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+                        this.speedY = -this.speedY;
+                    }
+                }
+
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Инициализация частиц
+            function init() {
+                console.log("DEBUG JS: Initializing particles (inline).");
+                particles = [];
+                for (let i = 0; i < numParticles; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    particles.push(new Particle(x, y));
+                }
+            }
+
+            // Главный цикл анимации
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+
+            // Обработчик изменения размера окна
+            window.addEventListener('resize', () => {
+                console.log("DEBUG JS: Window resized (inline).");
+                setCanvasSize();
+                init();
+            });
+
+            // Запускаем
+            setCanvasSize();
+            init();
+            animate();
+            console.log("DEBUG JS: Animation started (inline).");
+        });
+    </script>
 {% endblock %}
