@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ _('Добавить новую финансовую цель') }}{% endblock %} {# ЭТОТ ТЕКСТ БУДЕТ "НОВАЯ ЗАПИСЬ" ИЗ locales.py #}
+{% block title %}{{ _('Новая запись') }}{% endblock %} {# Заголовок страницы #}
 
 {% block content %}
     {# Canvas для фоновой анимации с display: block #}
     <canvas id="backgroundCanvas" class="fixed top-0 left-0 w-full h-full -z-10" style="display: block;"></canvas>
 
-    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Добавить новую финансовую цель') }}</h2> {# ЭТОТ ТЕКСТ БУДЕТ "НОВАЯ ЗАПИСЬ" ИЗ locales.py #}
+    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Новая запись') }}</h2> {# Заголовок формы #}
     <form action="{{ url_for('add_goal') }}" method="post" class="space-y-4">
         <div>
             <label for="goal_type" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Тип цели:') }}</label>
@@ -16,18 +16,16 @@
                 <option value="saving">{{ _('Накопление') }}</option>
             </select>
         </div>
-        {# Выбор конкретной цели сбережения #}
+        {# НОВОЕ: Выбор конкретной цели сбережения (теперь из фиксированного списка) #}
         <div>
             <label for="user_goal" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Связать с целью (опционально):') }}</label>
             <select id="user_goal" name="user_goal_id" class="w-full p-2 border rounded-md">
-                <option value="">{{ _('Не выбрано') }}</option>
-                {% for goal in user_goals %}
-                    <option value="{{ goal.id }}">{{ goal.name }}</option>
+                <option value="">{{ _('Не выбрано') }}</option> {# Опция "Не выбрано" #}
+                {% for goal_name in FIXED_GOALS %} {# ИЗМЕНЕНО: Используем FIXED_GOALS #}
+                    <option value="{{ goal_name }}">{{ _(goal_name) }}</option> {# ИЗМЕНЕНО: Значение - само название цели #}
                 {% endfor %}
             </select>
-            {% if not user_goals %}
-                <p class="text-sm text-gray-500 mt-1">{{ _('У вас пока нет целей. Добавьте их на странице "Мои Цели".') }}</p>
-            {% endif %}
+            {# УДАЛЕНО: Блок {% if not user_goals %} больше не нужен, т.к. цели фиксированы #}
         </div>
         <div>
             <label for="note" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Заметка:') }}</label>
@@ -38,16 +36,14 @@
             <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Сумма:') }}</label>
             <input type="number" id="amount" name="amount" step="0.01" placeholder="{{ _('Введите сумму...') }}" class="w-full p-2 border rounded-md" required>
         </div>
-        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Добавить цель') }}</button>
+        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Добавить запись') }}</button> {# ИЗМЕНЕНО: Текст кнопки #}
     </form>
 {% endblock %}
 
 {% block scripts %}
     {{ super() }} {# Вызов родительского блока scripts, если он есть #}
     <script>
-        // Код из static/js/background_animation.js ВСТАВЛЯЕТСЯ СЮДА
-        // ТОЧНО так, как он есть в файле background_animation.js
-
+        // Код для фоновой анимации
         console.log("DEBUG JS: Script file loaded (inline).");
 
         document.addEventListener('DOMContentLoaded', () => {

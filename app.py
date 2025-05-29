@@ -12,6 +12,15 @@ app = Flask(__name__)
 app.jinja_env.globals['_'] = _
 app.config['SECRET_KEY'] = '2qy5nytxmcen56zc9yzho6'  # Замените на свою уникальную строку!
 
+# НОВОЕ: Фиксированный список целей (БЕЗ _() вызовов здесь)
+FIXED_GOALS = [
+    'Развитие бизнеса',
+    'Покупка недвижимости',
+    'Обучение',
+    'Инвестиции в образ (имидж)',
+    'Текущие затраты',
+]
+
 
 # Функция для определения локали (языка) для каждого запроса
 def get_locale_from_request():
@@ -34,10 +43,7 @@ def get_locale_from_request():
 # Добавляем g.locale для использования в шаблонах
 @app.before_request
 def set_g_locale():
-    # print("DEBUG: >>> set_g_locale function started. <<<") # ДИАГНОСТИКА: Можно раскомментировать, если нужно
     g.locale = get_locale_from_request()
-    # print(f"DEBUG: Active locale in g.locale: {g.locale}") # ДИАГНОСТИКА
-    # print("DEBUG: <<< set_g_locale function finished. >>>") # ДИАГНОСТИКА
 
 
 # Функция для получения соединения с БД для каждого запроса
@@ -152,7 +158,6 @@ def login():
     return render_template('login.html')
 
 
-# Страница выхода
 @app.route('/logout')
 def logout():
     session.clear()
@@ -160,23 +165,12 @@ def logout():
     return redirect(url_for('index'))
 
 
-# Главная страница
 @app.route('/')
 @login_required
 def index():
     """Главная страница для добавления цели (только для вошедших пользователей)."""
-    # print(f"Текущая локаль: {g.locale}") # ДИАГНОСТИКА: Можно раскомментировать, если нужно
-    # print(f"Перевод 'Мои Финансы': {_('Мои Финансы')}") # ДИАГНОСТИКА
-
-    conn = get_db()
-    cursor = conn.cursor()
-    user_id = g.user['id']
-
-    # Получаем все цели, созданные пользователем, для выпадающего списка
-    cursor.execute("SELECT id, name FROM user_goals WHERE user_id = ? ORDER BY name ASC", (user_id,))
-    user_goals = cursor.fetchall()
-
-    return render_template('index.html', user_goals=user_goals)
+    # Теперь передаем FIXED_GOALS вместо user_goals
+    return render_template('index.html', user_goals=FIXED_GOALS)
 
 
 @app.route('/add_goal', methods=['POST'])
@@ -189,7 +183,6 @@ def add_goal():
     amount_str = request.form['amount'].strip()
     user_goal_id = request.form.get('user_goal_id')  # Получаем user_goal_id из формы (может быть пустым)
 
-    # Валидация и преобразование суммы
     try:
         amount = float(amount_str)
     except ValueError:
@@ -203,16 +196,14 @@ def add_goal():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Добавляем цель для текущего пользователя, включая сумму и user_goal_id
-    # Если user_goal_id пустой, сохраняем его как NULL
+    # Вставляем user_goal_id как TEXT
     cursor.execute("INSERT INTO goals (user_id, goal_type, note, amount, user_goal_id) VALUES (?, ?, ?, ?, ?)",
                    (user_id, goal_type, note, amount, user_goal_id if user_goal_id else None))
     conn.commit()
-    flash(_('Цель успешно добавлена!'), 'success')
+    flash(_('Запись успешно добавлена!'), 'success')
     return redirect(url_for('user_notes', username=g.user['username']))
 
 
-# Страница заметок
 @app.route('/notes/<username>')
 @login_required
 def user_notes(username):
@@ -268,26 +259,24 @@ def user_notes(username):
         elif record['goal_type'] == 'saving':
             total_summary['total_saving'] += record['amount']
 
-    # --- Саммари по конкретным целям сбережений ---
+    # --- Саммари по конкретным фиксированным целям сбережений ---
     goals_summary = {}
-    # Получаем все пользовательские цели
-    cursor.execute("SELECT id, name FROM user_goals WHERE user_id = ? ORDER BY name ASC", (user_id,))
-    user_goals_list_for_summary = cursor.fetchall()
+    for fixed_goal_name in FIXED_GOALS:  # Перебираем фиксированные цели
+        goals_summary[fixed_goal_name] = 0.0  # Инициализируем сумму для каждой цели
 
-    for ug in user_goals_list_for_summary:
-        goals_summary[ug['name']] = 0.0  # Инициализируем сумму для каждой цели
-
-    # Суммируем накопления по каждой цели
+    # Суммируем накопления по каждой фиксированной цели
+    # Теперь user_goal_id является строкой с названием цели
     cursor.execute(
-        "SELECT ug.name, SUM(g.amount) FROM goals g JOIN user_goals ug ON g.user_goal_id = ug.id WHERE g.user_id = ? AND g.goal_type = 'saving' GROUP BY ug.name",
+        "SELECT user_goal_id, SUM(amount) FROM goals WHERE user_id = ? AND goal_type = 'saving' AND user_goal_id IS NOT NULL GROUP BY user_goal_id",
         (user_id,)
     )
     saving_by_goal_records = cursor.fetchall()
 
     for record in saving_by_goal_records:
-        goal_name = record[0]  # Имя цели
-        total_amount = record[1]  # Сумма
-        goals_summary[goal_name] = total_amount
+        goal_name = record[0]
+        total_amount = record[1]
+        if goal_name in FIXED_GOALS:  # Убедимся, что цель из фиксированного списка
+            goals_summary[goal_name] = total_amount
 
     # Также получаем общую сумму накоплений без привязки к цели (если таковые есть)
     cursor.execute(
@@ -302,12 +291,11 @@ def user_notes(username):
                            username=username,
                            notes=notes,
                            monthly_summary=monthly_summary,
-                           total_summary=total_summary,  # Передаем в шаблон
-                           goals_summary=goals_summary,  # Передаем в шаблон
-                           user_goals_list_full=user_goals_list_for_summary)  # Передаем для отображения цели записи
+                           total_summary=total_summary,
+                           goals_summary=goals_summary,
+                           )  # user_goals_list_full больше не передается
 
 
-# Страница поиска заметок
 @app.route('/search_notes', methods=['POST'])
 @login_required
 def search_notes():
@@ -319,7 +307,6 @@ def search_notes():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Выполняем поиск заметок по ключевому слову в поле 'note'
     cursor.execute("SELECT * FROM goals WHERE user_id = ? AND note LIKE ?",
                    (user_id, f"%{search_query}%"))
     found_notes = cursor.fetchall()
@@ -328,7 +315,6 @@ def search_notes():
     return render_template('notes.html', username=username, notes=found_notes, search_query=search_query)
 
 
-# Страница редактирования записи
 @app.route('/edit_goal/<int:goal_id>', methods=['GET', 'POST'])
 @login_required
 def edit_goal(goal_id):
@@ -340,22 +326,19 @@ def edit_goal(goal_id):
     cursor.execute("SELECT * FROM goals WHERE id = ?", (goal_id,))
     goal = cursor.fetchone()
 
-    # Проверяем, существует ли запись и принадлежит ли она текущему пользователю
     if goal is None or goal['user_id'] != user_id:
         flash(_('Запись не найдена или у вас нет прав доступа.'), 'danger')
         return redirect(url_for('user_notes', username=g.user['username']))
 
-    # Получаем все цели, созданные пользователем, для выпадающего списка
-    cursor.execute("SELECT id, name FROM user_goals WHERE user_id = ? ORDER BY name ASC", (user_id,))
-    user_goals = cursor.fetchall()
+    # Передаем фиксированные цели
+    user_goals = FIXED_GOALS  # НОВОЕ: Используем фиксированные цели
 
     if request.method == 'POST':
         goal_type = request.form['goal_type']
         note = request.form['note'].strip()
         amount_str = request.form['amount'].strip()
-        user_goal_id = request.form.get('user_goal_id')
+        user_goal_id = request.form.get('user_goal_id')  # Это user_goal_name
 
-        # Валидация и преобразование суммы
         try:
             amount = float(amount_str)
         except ValueError:
@@ -366,7 +349,7 @@ def edit_goal(goal_id):
             flash(_('Пожалуйста, заполните заметку!'), 'warning')
             return render_template('edit_goal.html', goal=goal, user_goals=user_goals)
 
-        # Обновляем запись в БД, включая сумму и user_goal_id
+        # Обновляем запись в БД, включая сумму и user_goal_id (как TEXT)
         cursor.execute(
             "UPDATE goals SET goal_type = ?, note = ?, amount = ?, user_goal_id = ? WHERE id = ?",
             (goal_type, note, amount, user_goal_id if user_goal_id else None, goal_id)
@@ -378,7 +361,7 @@ def edit_goal(goal_id):
     return render_template('edit_goal.html', goal=goal, user_goals=user_goals)
 
 
-# НОВОЕ: Маршрут для удаления финансовой записи
+# Маршрут для удаления финансовой записи
 @app.route('/delete_goal/<int:goal_id>', methods=['POST'])
 @login_required
 def delete_goal(goal_id):
@@ -386,7 +369,6 @@ def delete_goal(goal_id):
     cursor = conn.cursor()
     user_id = g.user['id']
 
-    # Проверяем, существует ли запись и принадлежит ли она текущему пользователю
     cursor.execute("SELECT id, user_id FROM goals WHERE id = ?", (goal_id,))
     goal_to_delete = cursor.fetchone()
 
@@ -400,38 +382,19 @@ def delete_goal(goal_id):
     return redirect(url_for('user_notes', username=g.user['username']))
 
 
-# Страница для управления пользовательскими целями (создание, просмотр)
-@app.route('/goals', methods=['GET', 'POST'])
-@login_required
-def goals():
-    conn = get_db()
-    cursor = conn.cursor()
-    user_id = g.user['id']
-    error = None
+# НОВОЕ: Эти маршруты удалены, так как цели теперь фиксированы и не управляются пользователем
+# @app.route('/goals', methods=['GET', 'POST'])
+# @login_required
+# def goals():
+#     pass
 
-    if request.method == 'POST':
-        goal_name = request.form['goal_name'].strip()
-        if not goal_name:
-            error = _('Название цели не может быть пустым.')
-        else:
-            try:
-                cursor.execute("INSERT INTO user_goals (user_id, name) VALUES (?, ?)",
-                               (user_id, goal_name))
-                conn.commit()
-                # Правильное форматирование строки
-                flash(_('Цель "%(goal_name)s" успешно добавлена!', goal_name=goal_name), 'success')
-            except sqlite3.IntegrityError:
-                error = _('Цель с таким названием уже существует.')
-
-            if error:
-                flash(error, 'danger')
-
-    # Получаем все цели, созданные пользователем
-    cursor.execute("SELECT id, name FROM user_goals WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
-    user_goals = cursor.fetchall()
-
-    return render_template('goals.html', user_goals=user_goals)
+# НОВОЕ: Эти маршруты удалены, так как цели теперь фиксированы и не управляются пользователем
+# @app.route('/delete_user_goal/<int:user_goal_id>', methods=['POST'])
+# @login_required
+# def delete_user_goal(user_goal_id):
+#     pass
 
 
+# ВАЖНО: Все маршруты (@app.route) должны быть определены ДО этой строки!
 if __name__ == '__main__':
     app.run(debug=True)

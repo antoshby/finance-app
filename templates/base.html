@@ -35,36 +35,64 @@
         .flash-danger { @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4; }
         .flash-warning { @apply bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4; }
         .flash-info { @apply bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-4; }
+
+        /* Стили для мобильного меню (скрыто по умолчанию, показывается JS) */
+        .mobile-menu {
+            display: none;
+        }
+        .mobile-menu.active {
+            display: flex; /* Показываем меню при активном состоянии */
+            flex-direction: column;
+            width: 100%;
+            background-color: #374151; /* Темнее, чем nav */
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+        }
+        .mobile-menu a, .mobile-menu span, .mobile-menu select {
+            padding: 0.5rem 0;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .mobile-menu select {
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
     <nav class="w-full bg-gray-800 text-white p-4 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="container mx-auto flex flex-wrap justify-between items-center"> {# flex-wrap для мобильных #}
             {# ИЗМЕНЕНО: Название приложения всегда 'My Finances', без перевода #}
             <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">My Finances</a>
-            <div class="flex items-center"> {# Добавил flex для выравнивания элементов #}
-                {% if g.user %}
-                    {# Приветствие переводим #}
-                    <span class="mr-4">{{ _('Привет,') }} <span class="font-bold">{{ g.user.username }}</span>!</span>
-                    {# "Мои Заметки" переводим #}
-                    <a href="{{ url_for('user_notes', username=g.user.username) }}" class="mr-4 hover:text-gray-300">{{ _('Мои Заметки') }}</a>
-                    {# НОВОЕ: Ссылка на страницу целей #}
-                    <a href="{{ url_for('goals') }}" class="mr-4 hover:text-gray-300">{{ _('Мои Цели') }}</a>
-                    {# "Выйти" переводим #}
-                    <a href="{{ url_for('logout') }}" class="hover:text-gray-300">{{ _('Выйти') }}</a>
-                {% else %}
-                    {# "Регистрация" переводим #}
-                    <a href="{{ url_for('register') }}" class="mr-4 hover:text-gray-300">{{ _('Регистрация') }}</a>
-                    {# "Войти" переводим #}
-                    <a href="{{ url_for('login') }}" class="hover:text-gray-300">{{ _('Войти') }}</a>
-                {% endif %}
 
-                {# НОВОЕ: Выпадающее меню для выбора языка #}
-                <select id="language-selector" class="ml-4 px-2 py-1 rounded bg-gray-700 text-white border-none">
-                    <option value="ru" {% if g.locale == 'ru' %}selected{% endif %}>RU</option>
-                    <option value="en" {% if g.locale == 'en' %}selected{% endif %}>EN</option>
-                </select>
+            {# Кнопка-гамбургер для мобильного меню #}
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
 
+            {# Элементы навигации - скрыты на мобильных по умолчанию, показываются на md и выше #}
+            <div id="main-navigation-menu" class="hidden md:flex md:items-center md:w-auto w-full"> {# hidden на мобильных, flex на md+ #}
+                <div class="flex flex-col md:flex-row md:space-x-4 mt-4 md:mt-0 items-center"> {# flex-col на мобильных, flex-row на md+ #}
+                    {% if g.user %}
+                        <span class="mr-4">{{ _('Привет,') }} <span class="font-bold">{{ g.user.username }}</span>!</span>
+                        <a href="{{ url_for('user_notes', username=g.user.username) }}" class="mr-4 hover:text-gray-300">{{ _('Мои Заметки') }}</a>
+                        {# УДАЛЕНО: Ссылка на страницу целей была здесь #}
+                        <a href="{{ url_for('logout') }}" class="hover:text-gray-300">{{ _('Выйти') }}</a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="mr-4 hover:text-gray-300">{{ _('Регистрация') }}</a>
+                        <a href="{{ url_for('login') }}" class="hover:text-gray-300">{{ _('Войти') }}</a>
+                    {% endif %}
+
+                    {# Выпадающее меню для выбора языка #}
+                    <select id="language-selector" class="ml-4 px-2 py-1 rounded bg-gray-700 text-white border-none">
+                        <option value="ru" {% if g.locale == 'ru' %}selected{% endif %}>RU</option>
+                        <option value="en" {% if g.locale == 'en' %}selected{% endif %}>EN</option>
+                    </select>
+                </div>
             </div>
         </div>
     </nav>
@@ -91,26 +119,32 @@
 
     {# Блок для подключения скриптов #}
     {% block scripts %}
-        {# УДАЛЕНО: {{ super() }} #}
-        {# Если вы еще не удалили static/js/background_animation.js, и он используется в index.html, убедитесь, что он здесь, или код ниже будет выполняться дважды #}
         <script>
-            console.log("DEBUG JS Base: Script block in base.html loaded."); // ДИАГНОСТИКА
+            // JavaScript для обработки выбора языка из выпадающего меню
             document.addEventListener('DOMContentLoaded', function() {
-                console.log("DEBUG JS Base: DOMContentLoaded fired in base.html."); // ДИАГНОСТИКА
                 const selector = document.getElementById('language-selector');
                 if (selector) {
-                    console.log("DEBUG JS Base: Language selector found."); // ДИАГНОСТИКА
-                    // Устанавливаем выбранное значение селектора при загрузке страницы
-                    selector.value = "{{ g.locale }}"; // Убедимся, что селектор показывает текущий язык
+                    selector.value = "{{ g.locale }}";
                     selector.addEventListener('change', function() {
-                        console.log("DEBUG JS Base: Language changed event fired. Value:", this.value); // ДИАГНОСТИКА
                         const selectedLang = this.value;
                         const currentUrl = new URL(window.location.href);
-                        currentUrl.searchParams.set('lang', selectedLang); // Изменяем параметр 'lang'
-                        window.location.href = currentUrl.toString(); // Перенаправляем на новый URL
+                        currentUrl.searchParams.set('lang', selectedLang);
+                        window.location.href = currentUrl.toString();
                     });
                 } else {
-                    console.warn("DEBUG JS Base: Language selector not found!"); // ДИАГНОСТИКА: Если селектор не найден
+                    console.warn("DEBUG JS Base: Language selector not found!");
+                }
+
+                // JavaScript для мобильного меню (гамбургер)
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const mainNavigationMenu = document.getElementById('main-navigation-menu');
+
+                if (mobileMenuButton && mainNavigationMenu) {
+                    mobileMenuButton.addEventListener('click', function() {
+                        mainNavigationMenu.classList.toggle('hidden');
+                        mainNavigationMenu.classList.toggle('mobile-menu'); // Добавляем класс для стилей мобильного меню
+                        mainNavigationMenu.classList.toggle('active'); // Активируем стили
+                    });
                 }
             });
         </script>

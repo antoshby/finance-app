@@ -16,11 +16,22 @@
                     <option value="saving" {% if goal.goal_type == 'saving' %}selected{% endif %}>{{ _('Накопление') }}</option>
                 </select>
             </div>
+            {# НОВОЕ: Выбор конкретной цели сбережения (теперь из фиксированного списка) #}
+            <div>
+                <label for="user_goal" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Связать с целью (опционально):') }}</label>
+                <select id="user_goal" name="user_goal_id" class="w-full p-2 border rounded-md">
+                    <option value="">{{ _('Не выбрано') }}</option> {# Опция "Не выбрано" #}
+                    {% for goal_name in user_goals %} {# ИЗМЕНЕНО: Используем user_goals (т.е. FIXED_GOALS из app.py) #}
+                        <option value="{{ goal_name }}" {% if goal.user_goal_id == goal_name %}selected{% endif %}>{{ _(goal_name) }}</option> {# ИЗМЕНЕНО: Добавлен _() и сравнение по названию #}
+                    {% endfor %}
+                </select>
+                {# УДАЛЕНО: Блок {% if not user_goals %} больше не нужен, т.к. цели фиксированы #}
+            </div>
             <div>
                 <label for="note" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Заметка:') }}</label>
                 <textarea id="note" name="note" rows="4" class="w-full p-2 border rounded-md" required>{{ goal.note }}</textarea>
             </div>
-            {# НОВОЕ: Поле для суммы (Задача 3) - добавим его сейчас, чтобы не возвращаться к этой форме #}
+            {# Поле для суммы #}
             <div>
                 <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">{{ _('Сумма:') }}</label>
                 <input type="number" id="amount" name="amount" step="0.01" value="{{ goal.amount if goal.amount is not none else '0.00' }}" class="w-full p-2 border rounded-md" required>

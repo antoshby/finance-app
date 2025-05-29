@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ _('Мои Заметки') }}{% endblock %} {# НОВОЕ: Переведено #}
+{% block title %}{{ _('Мои Заметки') }}{% endblock %} {# Переведено #}
 
 {% block content %}
-    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Заметки пользователя:') }} {{ username }}</h2> {# НОВОЕ: Переведено #}
+    <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Заметки пользователя:') }} {{ username }}</h2> {# Переведено #}
 
-    <h3 class="text-xl font-bold mb-4">{{ _('Поиск заметок') }}</h3> {# НОВОЕ: Переведено #}
+    <h3 class="text-xl font-bold mb-4">{{ _('Поиск заметок') }}</h3> {# Переведено #}
     <form action="{{ url_for('search_notes') }}" method="post" class="flex space-x-2 mb-6">
-        <input type="text" name="search_query" placeholder="{{ _('Введите запрос для поиска...') }}" value="{{ search_query or '' }}" class="flex-grow p-2 border rounded-md"> {# НОВОЕ: Переведено #}
-        <button type="submit" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Найти') }}</button> {# НОВОЕ: Переведено #}
+        <input type="text" name="search_query" placeholder="{{ _('Введите запрос для поиска...') }}" value="{{ search_query or '' }}" class="flex-grow p-2 border rounded-md"> {# Переведено #}
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">{{ _('Найти') }}</button> {# Переведено #}
     </form>
 
     {# Блок для отображения месячного саммари (в виде карточки) #}
@@ -36,7 +36,7 @@
         </ul>
     </div>
 
-    {# НОВОЕ: Блок для отображения общего саммари (в виде карточки) #}
+    {# Блок для отображения общего саммари (в виде карточки) #}
     <div class="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200"> {# Добавлены классы для карточки #}
         <h3 class="text-xl font-semibold mb-4 text-gray-800">{{ _('Общие итоги:') }}</h3>
         <ul class="space-y-2 text-gray-700"> {# Изменен стиль списка #}
@@ -92,13 +92,7 @@
                         {# Отображение даты и времени создания #}
                         <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
                         {% if note.user_goal_id %} {# Если запись связана с целью #}
-                            {% set related_goal_name = "" %}
-                            {% for goal in user_goals_list_full %} {# Ищем имя цели по ID #}
-                                {% if goal.id == note.user_goal_id %}
-                                    {% set related_goal_name = goal.name %}
-                                {% endif %}
-                            {% endfor %}
-                            <p class="text-blue-500 text-sm">{{ _('Цель:') }} {{ related_goal_name }}</p>
+                            <p class="text-blue-500 text-sm">{{ _('Цель:') }} {{ note.user_goal_id }}</p> {# user_goal_id теперь содержит название цели #}
                         {% endif %}
                     </div>
 
