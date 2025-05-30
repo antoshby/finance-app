@@ -3,6 +3,9 @@
 {% block title %}{{ _('Мои Заметки') }}{% endblock %} {# Переведено #}
 
 {% block content %}
+    {# Canvas для фоновой анимации с display: block #}
+    <canvas id="backgroundCanvas" class="fixed top-0 left-0 w-full h-full -z-10" style="display: block;"></canvas>
+
     <h2 class="text-2xl font-bold mb-6 text-center">{{ _('Заметки пользователя:') }} {{ username }}</h2> {# Переведено #}
 
     <h3 class="text-xl font-bold mb-4">{{ _('Поиск заметок') }}</h3> {# Переведено #}
@@ -68,7 +71,7 @@
             <ul class="space-y-2 text-gray-700"> {# Изменен стиль списка #}
                 {% for goal_name, amount in goals_summary.items() %}
                     <li class="flex justify-between items-center">
-                        <span>{{ goal_name }}:</span>
+                        <span>{{ _(goal_name) }}:</span> {# ИЗМЕНЕНО: Добавлен _() для перевода названия цели #}
                         <span class="font-bold text-blue-600">{{ amount | round(2) }}</span>
                     </li>
                 {% endfor %}
@@ -76,23 +79,23 @@
         {% else %}
             <p class="text-gray-600">{{ _('Нет данных.') }}</p>
         {% endif %}
-        <p class="text-sm text-gray-500 mt-2">{{ _('Цели можно добавить на странице "Мои Цели".') }}</p>
+        {# УДАЛЕНО: Строка про "Цели можно добавить на странице "Мои Цели"." #}
     </div>
 
 
-    <h3 class="text-xl font-bold mb-4">{{ _('Все заметки:') }}</h3> {# НОВОЕ: Переведено #}
+    <h3 class="text-xl font-bold mb-4">{{ _('Все заметки:') }}</h3> {# Переведено #}
     {% if notes %}
         <ul class="space-y-4">
             {% for note in notes %}
                 <li class="p-4 border rounded-lg shadow-sm bg-gray-50 flex justify-between items-center"> {# Добавлен flex #}
                     <div> {# Обертка для контента заметки #}
-                        <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# НОВОЕ: Переведено #}
+                        <p class="text-lg font-semibold">{{ _('Тип:') }} {{ note.goal_type | capitalize }}</p> {# Переведено #}
                         {# Отображение заметки и суммы #}
                         <p class="text-gray-800">{{ _('Заметка:') }} {{ note.note }} ({{ note.amount | round(2) }})</p>
                         {# Отображение даты и времени создания #}
                         <p class="text-gray-500 text-sm">{{ _('Дата создания:') }} {{ note.created_at }}</p>
                         {% if note.user_goal_id %} {# Если запись связана с целью #}
-                            <p class="text-blue-500 text-sm">{{ _('Цель:') }} {{ note.user_goal_id }}</p> {# user_goal_id теперь содержит название цели #}
+                            <p class="text-blue-500 text-sm">{{ _('Цель:') }} {{ _(note.user_goal_id) }}</p> {# ИЗМЕНЕНО: Добавлен _() #}
                         {% endif %}
                     </div>
 
@@ -110,6 +113,93 @@
             {% endfor %}
         </ul>
     {% else %}
-        <p class="text-gray-600">{{ _('У вас пока нет заметок. Добавьте первую!') }}</p> {# НОВОЕ: Переведено #}
+        <p class="text-gray-600">{{ _('У вас пока нет заметок. Добавьте первую!') }}</p> {# Переведено #}
     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} {# Вызов родительского блока scripts, если он есть #}
+    <script>
+        // Код для фоновой анимации на странице notes
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('backgroundCanvas');
+            if (!canvas) {
+                console.error("DEBUG JS ERROR: Canvas element with ID 'backgroundCanvas' not found on notes.html!");
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error("DEBUG JS ERROR: 2D rendering context not available for canvas on notes.html!");
+                return;
+            }
+
+            let particles = [];
+            const numParticles = 100; // Количество частиц
+
+            function setCanvasSize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.color = 'rgba(65, 105, 225, 0.5)'; // НОВОЕ: RoyalBlue (темно-синий)
+                }
+
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+
+                    if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+                        this.speedX = -this.speedX;
+                    }
+                    if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+                        this.speedY = -this.speedY;
+                    }
+                }
+
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function init() {
+                particles = [];
+                for (let i = 0; i < numParticles; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    particles.push(new Particle(x, y));
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(65, 105, 225, 0.1)'; // НОВОЕ: Полупрозрачный RoyalBlue
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', () => {
+                setCanvasSize();
+                init();
+            });
+
+            setCanvasSize();
+            init();
+            animate();
+        });
+    </script>
 {% endblock %}

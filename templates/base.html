@@ -4,25 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {# Заголовок страницы переводим #}
-    <title>{% block title %}{{ _('Управление Финансами') }}{% endblock %}</title>
+    <title>{% block title %}{{ _('Мои Сбережения') }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Светло-серый фон */
+            background-color: #f3f4f6; /* Светло-серый фон по умолчанию */
             color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        /* Убедимся, что основной контент занимает доступное пространство */
+        /* Убежимся, что основной контент занимает доступное пространство */
         .main-content-wrapper {
-            flex-grow: 1; /* Позволяет блоку растягиваться, занимая все доступное место между хедером и футером */
+            flex-grow: 1;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 1rem; /* Добавляем небольшой отступ */
+            align-items: flex-start;
+            padding: 1rem;
         }
         .container {
             max-width: 800px;
-            width: 100%; /* Убедимся, что контейнер занимает всю доступную ширину */
+            width: 100%;
         }
         /* Дополнительные стили для лучшего вида */
         input[type="text"], input[type="password"], textarea, select {
@@ -41,7 +44,7 @@
             display: none;
         }
         .mobile-menu.active {
-            display: flex; /* Показываем меню при активном состоянии */
+            display: flex;
             flex-direction: column;
             width: 100%;
             background-color: #374151; /* Темнее, чем nav */
@@ -60,11 +63,13 @@
             margin-right: auto;
         }
     </style>
+    {# Ссылка на Favicon #}
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body class="flex flex-col min-h-screen">
     <nav class="w-full bg-gray-800 text-white p-4 shadow-md">
         <div class="container mx-auto flex flex-wrap justify-between items-center"> {# flex-wrap для мобильных #}
-            {# ИЗМЕНЕНО: Название приложения всегда 'My Finances', без перевода #}
+            {# Название приложения всегда 'My Finances', без перевода #}
             <a href="{{ url_for('index') }}" class="text-xl font-bold hover:text-gray-300">My Finances</a>
 
             {# Кнопка-гамбургер для мобильного меню #}
@@ -117,6 +122,13 @@
         Developed By AntOsh (<a href="https://immediatech.net" target="_blank" class="text-blue-400 hover:underline">immedia.tech</a>)
     </footer>
 
+    {# Плавающая кнопка "Добавить цель" #}
+    <a href="{{ url_for('index') }}" id="add-goal-fab" class="fixed bottom-6 right-6 bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition duration-300 z-50">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+    </a>
+
     {# Блок для подключения скриптов #}
     {% block scripts %}
         <script>
@@ -145,6 +157,117 @@
                         mainNavigationMenu.classList.toggle('mobile-menu'); // Добавляем класс для стилей мобильного меню
                         mainNavigationMenu.classList.toggle('active'); // Активируем стили
                     });
+                }
+            });
+
+            // НОВОЕ: Скрытие кнопки "Добавить цель" и управление фоновой анимацией
+            document.addEventListener('DOMContentLoaded', function() {
+                const addGoalFab = document.getElementById('add-goal-fab');
+                const backgroundCanvas = document.getElementById('backgroundCanvas'); // Получаем canvas
+                const currentPath = window.location.pathname;
+
+                // Управление видимостью FAB-кнопки
+                if (addGoalFab) {
+                    if (currentPath === '/login' || currentPath === '/register') {
+                        addGoalFab.style.display = 'none'; // Скрываем кнопку
+                    } else {
+                        addGoalFab.style.display = 'flex'; // Показываем кнопку
+                    }
+                }
+
+                // Управление фоновой анимацией и её цветом
+                if (backgroundCanvas) {
+                    let particleColor = 'rgba(100, 100, 100, 0.3)'; // Цвет по умолчанию (серый для главной)
+                    let clearColor = 'rgba(255, 255, 255, 0.1)'; // Цвет очистки по умолчанию (белый)
+
+                    if (currentPath.startsWith('/notes')) {
+                        particleColor = 'rgba(65, 105, 225, 0.5)'; // RoyalBlue для My Notes
+                        clearColor = 'rgba(65, 105, 225, 0.1)';
+                    } else if (currentPath === '/') {
+                        particleColor = 'rgba(100, 100, 100, 0.3)'; // Серый для New Input (главной)
+                        clearColor = 'rgba(243, 244, 246, 0.1)'; // Цвет фона body
+                    } else if (currentPath === '/goals') { // Хотя /goals удален, если вдруг появится
+                        particleColor = 'rgba(128, 0, 32, 0.5)'; // Мягкий бордовый (Maroon)
+                        clearColor = 'rgba(128, 0, 32, 0.1)';
+                    } else if (currentPath === '/login' || currentPath === '/register') {
+                        // На страницах логина и регистрации анимации быть не должно
+                        backgroundCanvas.style.display = 'none';
+                        return; // Выходим, чтобы не запускать анимацию
+                    }
+
+                    const ctx = backgroundCanvas.getContext('2d');
+                    if (!ctx) {
+                        console.error("DEBUG JS ERROR: 2D rendering context not available for canvas!");
+                        return;
+                    }
+
+                    let particles = [];
+                    const numParticles = 100;
+
+                    function setCanvasSize() {
+                        backgroundCanvas.width = window.innerWidth;
+                        backgroundCanvas.height = window.innerHeight;
+                    }
+
+                    class Particle {
+                        constructor(x, y) {
+                            this.x = x;
+                            this.y = y;
+                            this.size = Math.random() * 3 + 1;
+                            this.speedX = Math.random() * 0.5 - 0.25;
+                            this.speedY = Math.random() * 0.5 - 0.25;
+                            this.color = particleColor; // Используем динамический цвет
+                        }
+
+                        update() {
+                            this.x += this.speedX;
+                            this.y += this.speedY;
+
+                            if (this.x + this.size > backgroundCanvas.width || this.x - this.size < 0) {
+                                this.speedX = -this.speedX;
+                            }
+                            if (this.y + this.size > backgroundCanvas.height || this.y - this.size < 0) {
+                                this.speedY = -this.speedY;
+                            }
+                        }
+
+                        draw() {
+                            ctx.fillStyle = this.color;
+                            ctx.beginPath();
+                            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+
+                    function init() {
+                        particles = [];
+                        for (let i = 0; i < numParticles; i++) {
+                            const x = Math.random() * backgroundCanvas.width;
+                            const y = Math.random() * backgroundCanvas.height;
+                            particles.push(new Particle(x, y));
+                        }
+                    }
+
+                    function animate() {
+                        ctx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+                        ctx.fillStyle = clearColor; // Используем динамический цвет очистки
+                        ctx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+
+                        for (let i = 0; i < particles.length; i++) {
+                            particles[i].update();
+                            particles[i].draw();
+                        }
+                        requestAnimationFrame(animate);
+                    }
+
+                    window.addEventListener('resize', () => {
+                        setCanvasSize();
+                        init();
+                    });
+
+                    setCanvasSize();
+                    init();
+                    animate();
                 }
             });
         </script>
