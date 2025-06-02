@@ -88,8 +88,8 @@ def login_required(view):
 
 
 # Инициализация базы данных при запуске приложения
-with app.app_context():
-    init_db()
+#with app.app_context():
+    #init_db()
 
 
 # Страница регистрации
